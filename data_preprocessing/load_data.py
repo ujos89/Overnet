@@ -1,18 +1,13 @@
 import h5py
 import numpy as np
 import skimage.io as io
+import pandas as pd
 
 # data from https://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html
 path_data = '../../dataset/nyu_depth_v2/labeled/raw/nyu_depth_v2_labeled.mat'
-raw_data = h5py.File(path_data, mode='r+')
+raw_data = h5py.File(path_data, mode='r')
 
 ################
-
-
-## <depths>: NxWxH->1449x640x480 [m]
-depth_h5py = raw_data['depths']
-
-
 
 
 ######################
@@ -22,6 +17,8 @@ depth_h5py = raw_data['depths']
 # KeysViewHDF5 ['#refs#', '#subsystem#', 'accelData', 'depths', 'images', 'instances', 'labels', 'names', 'namesToIds', 'rawDepthFilenames', 'rawDepths', 'rawRgbFilenames', 'sceneTypes', 'scenes']
 
 ## functions
+
+# <HDF5 object reference> to string
 def h5py2str(raw_data, col_name):
     data_h5py = raw_data[col_name]
     data = np.array([])
@@ -32,46 +29,26 @@ def h5py2str(raw_data, col_name):
     #type: numpy array
     return data
 
-print(h5py2str(raw_data, 'names'))
+# names to title
+def names2title(name):
+    return name.split('.',)[0]
 
 
-## <names>: 1xC, names to 1d-array
-# raw_data (h5py) -> names
-names = h5py2str(raw_data, 'names')
-# print(names.shape)
-#(894, )
+## <names>: 1xC-, names to 1d-array
+# print(names.shape) -> (894, )
+obj_names = h5py2str(raw_data, 'names')
 
-## <images>: Nx3XWxH->(1449x3X640x480), conevert to 
-
-img_h5py = raw_data['images'][0]
-img = np.empty([480, 640, 3])
-img[:,:,0] = img_h5py[0,:,:].T
-img[:,:,1] = img_h5py[1,:,:].T
-img[:,:,2] = img_h5py[2,:,:].T
-
-img = img.astype('float32')
-io.imshow(img/255.0)
-io.show()
-
-
-## <rawDepthFilenames>: Nx1 
-depth_names_h5py = raw_data['rawDepthFilenames']
-depth_names = np.array([])
-
-for i in range(depth_names_h5py.shape[1]):
-    depth_name = ''.join(chr(_) for _ in raw_data[depth_names_h5py[0][i]])
-    depth_names = np.append(depth_names, depth_name)
-print(depth_names.shape)
-print(depth_names)
+## <rawDepthFilenames>: Nx1->1449x1
+depth_names = h5py2str(raw_data, 'rawDepthFilenames')
 
 ## <rawRgbFilenames>: Nx1 
-rgb_names = h5py2str(raw_data, 'rawRgbfilenames')
+rgb_names = h5py2str(raw_data, 'rawRgbFilenames')
 
-## error on use function
-##KeyError: "Unable to open object (object 'rawRgbfilenames' doesn't exist)"
+depth_title, rgb_title = np.array([]), np.array([]) 
+for _ in range(len(depth_names)):
+    depth_title = np.append(depth_title, names2title(depth_names[_]))
+    rgb_title = np.append(rgb_title, names2title(rgb_names[_]))
 
-# e.g.
-# 1448 -th, name:  dining_room_0036/d-1315329855.768027-4071441432.pgm dining_room_0036/r-1315329855.782488-4072768344.ppm
 
 
 
@@ -83,4 +60,39 @@ labels = raw_data['labels'][0]
 
 # print(labels.shape, names.shape, img.shape)
 # (640,480) (894,) (3, 640, 480)
+
+
+## <images>: Nx3XWxH->(1449x3X640x480), conevert to 
+
+img_h5py = raw_data['images'][0]
+img = np.empty([480, 640, 3])
+img[:,:,0] = img_h5py[0,:,:].T
+img[:,:,1] = img_h5py[1,:,:].T
+img[:,:,2] = img_h5py[2,:,:].T
+
+img = img.astype('float32')
+# show image
+# io.imshow(img/255.0)
+# io.show()
+
+# save image to png
+# io.imsave('./test.png', img/255.0)
+
+## <depths>: NxWxH->1449x640x480 [m]
+
+depth_h5py = raw_data['depths'][0]
+
+depth = np.empty([480, 640, 3])
+depth[:,:,0] = depth_h5py[:,:].T
+depth[:,:,1] = depth_h5py[:,:].T
+depth[:,:,2] = depth_h5py[:,:].T
+
+# show depth(depth visualization)
+io.imshow(depth/4.0)
+io.show()
+
+# save depth to csv
+depth_df = pd.DataFrame(depth_h5py)
+depth_df.to_csv('test.csv', index=False)
+
 
