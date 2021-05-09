@@ -7,12 +7,6 @@ import pandas as pd
 path_data = '../../dataset/nyu_depth_v2/labeled/raw/nyu_depth_v2_labeled.mat'
 raw_data = h5py.File(path_data, mode='r')
 
-################
-
-
-######################
-
-
 # print(raw_data.keys())
 # KeysViewHDF5 ['#refs#', '#subsystem#', 'accelData', 'depths', 'images', 'instances', 'labels', 'names', 'namesToIds', 'rawDepthFilenames', 'rawDepths', 'rawRgbFilenames', 'sceneTypes', 'scenes']
 
@@ -29,70 +23,73 @@ def h5py2str(raw_data, col_name):
     #type: numpy array
     return data
 
-# names to title
-def names2title(name):
-    return name.split('.',)[0]
+# name to title
+def name2title(name):
+    #image file title
+    title = name.split('.')[0]
+    
+    return ''.join(_ for _ in title.split('/r'))
 
+# image data from h5py to png file
+def h5py2img(img_h5py, title, path):
+    img = np.empty([480, 640, 3])
+    img[:,:,0] = img_h5py[0,:,:].T
+    img[:,:,1] = img_h5py[1,:,:].T
+    img[:,:,2] = img_h5py[2,:,:].T
+    img = img.astype('float32')
+    io.imsave(path+title+'.png', img/255.0)
 
-## <names>: 1xC-, names to 1d-array
-# print(names.shape) -> (894, )
-obj_names = h5py2str(raw_data, 'names')
+    # show image
+    # io.imshow(img/255.0)
+    # io.show()
+
+    # guide
+    # h5py2img(raw_data['images'][0], 'test_img','./')
+
+# show depth(depth visualization)
+# depth_h5py = raw_data['depths'][0]
+# depth = np.empty([480, 640, 3])
+# depth[:,:,0] = depth_h5py[:,:].T
+# depth[:,:,1] = depth_h5py[:,:].T
+# depth[:,:,2] = depth_h5py[:,:].T
+# io.imshow(depth/4.0)
+# io.show()
+
+def h5py2csv(h5py, title, path):
+    data = pd.DataFrame(h5py)
+    data.to_csv(path+title+'.csv', index=False)
 
 ## <rawDepthFilenames>: Nx1->1449x1
-depth_names = h5py2str(raw_data, 'rawDepthFilenames')
+#depth_names = h5py2str(raw_data, 'rawDepthFilenames')
 
 ## <rawRgbFilenames>: Nx1 
 rgb_names = h5py2str(raw_data, 'rawRgbFilenames')
 
-depth_title, rgb_title = np.array([]), np.array([]) 
-for _ in range(len(depth_names)):
-    depth_title = np.append(depth_title, names2title(depth_names[_]))
-    rgb_title = np.append(rgb_title, names2title(rgb_names[_]))
+title = np.array([]) 
+for _ in range(1449):
+    title = np.append(title, name2title(rgb_names[_]))
 
+## <names>: 1xC-, names to 1d-array
+# print(names.shape) -> (894, )
+label_title = h5py2str(raw_data, 'names')
 
+label_title_df = pd.DataFrame(label_title)
+label_title_df.to_csv('../../dataset/nyu_depth_v2/labeled/title/label_title.csv', index=False)
 
+title_df = pd.DataFrame(title)
+title_df.to_csv('../../dataset/nyu_depth_v2/labeled/title/title.csv', index=False)
 
-# HxW: 1...C, 0:unlabeled
-labels = raw_data['labels'][0]
-
-# print(type(labels), type(names), type(img))
-# type: numpy.ndarray
-
-# print(labels.shape, names.shape, img.shape)
-# (640,480) (894,) (3, 640, 480)
-
-
-## <images>: Nx3XWxH->(1449x3X640x480), conevert to 
-
-img_h5py = raw_data['images'][0]
-img = np.empty([480, 640, 3])
-img[:,:,0] = img_h5py[0,:,:].T
-img[:,:,1] = img_h5py[1,:,:].T
-img[:,:,2] = img_h5py[2,:,:].T
-
-img = img.astype('float32')
-# show image
-# io.imshow(img/255.0)
-# io.show()
-
-# save image to png
-# io.imsave('./test.png', img/255.0)
-
+## <labels>: HxW: 1...C, 0:unlabeled
+## <images>: Nx3XWxH->(1449x3X640x480)
 ## <depths>: NxWxH->1449x640x480 [m]
 
-depth_h5py = raw_data['depths'][0]
+for idx in range(1449):
+    img_h5py = raw_data['images'][idx]
+    depth_h5py = raw_data['depths'][idx]
+    label_h5py = raw_data['labels'][idx]
 
-depth = np.empty([480, 640, 3])
-depth[:,:,0] = depth_h5py[:,:].T
-depth[:,:,1] = depth_h5py[:,:].T
-depth[:,:,2] = depth_h5py[:,:].T
-
-# show depth(depth visualization)
-io.imshow(depth/4.0)
-io.show()
-
-# save depth to csv
-depth_df = pd.DataFrame(depth_h5py)
-depth_df.to_csv('test.csv', index=False)
+    h5py2img(img_h5py, title[idx], '../../dataset/nyu_depth_v2/labeled/image/')
+    h5py2csv(depth_h5py, title[idx], '../../dataset/nyu_depth_v2/labeled/depth/')
+    h5py2csv(label_h5py, title[idx], '../../dataset/nyu_depth_v2/labeled/label/')
 
 
