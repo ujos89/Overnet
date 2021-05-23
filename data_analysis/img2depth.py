@@ -12,6 +12,7 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 path_depth_img = '/home/ujos89/Desktop/Vision/DPT/output_monodepth/'
 path_depth_true = '/home/ujos89/Desktop/Vision/dataset/nyu_depth_v2/labeled/depth/'
 path_label = '/home/ujos89/Desktop/Vision/dataset/nyu_depth_v2/labeled/label/'
+path_save_output = '/home/ujos89/Desktop/Vision/dataset/nyu_depth_v2/dpt/'
 file_names = os.listdir(path_depth_img)
 loader = PFMLoader(color=False, compress=False)
 
@@ -83,6 +84,11 @@ def plot3d_contours(npData1, npData2, npData3):
 
 for file_name in file_names:
     if file_name.endswith('.png'):
+        ##file name
+        file_name_pfm = file_name.replace('.png','.pfm')
+        file_name_csv = file_name.replace('.png','.csv')
+        
+        ## png file
         print()
         print("png file name:",file_name)
         # type: numpy ndarray
@@ -90,8 +96,12 @@ for file_name in file_names:
         print("Range: ", np.min(depth_img_png), " ~ ", np.max(depth_img_png))
         print("Shape: ", depth_img_png.shape)
         #plot3d_contour(depth_img_png)
+        
+        #save output of png
+        df_dpt_png = pd.DataFrame(depth_img_png)
+        df_dpt_png.to_csv(path_save_output+'/dpt_png/'+file_name_csv,index = False)
 
-        file_name_pfm = file_name.replace('.png','.pfm')
+        ## pfm file
         print("pfm file name",file_name_pfm)
         # type: numpy ndarray
         depth_img_pfm = loader.load_pfm(path_depth_img+file_name_pfm)
@@ -99,9 +109,12 @@ for file_name in file_names:
         print("Range: ", np.min(depth_img_pfm), " ~ ", np.max(depth_img_pfm))
         print("Shape: ", depth_img_pfm.shape)
         #plot3d_contour(depth_img_pfm)
+        
+        # save output of pfm
+        df_dpt_pfm = pd.DataFrame(depth_img_pfm)
+        df_dpt_pfm.to_csv(path_save_output+'/dpt_pfm/'+file_name_csv, index = False)
 
         # true value of depth from nyu_depth_v2
-        file_name_csv = file_name.replace('.png','.csv')
         print("csv file name", file_name_csv)
         depth_true_value = pd.read_csv(path_depth_true+file_name_csv).to_numpy()
         depth_true_value = np.rot90(depth_true_value)
@@ -112,11 +125,11 @@ for file_name in file_names:
 
         #label 
         img_label = pd.read_csv(path_label+file_name_csv).to_numpy()
-        img_label =np.rot90(img_label)
+        img_label = np.rot90(img_label)
         img_label = img_label[::-1]
         print("Range: ", np.min(img_label), " ~ ", np.max(img_label))
         print("Shape: ", img_label.shape)
 
         #graph visualization
-        plot3d_contours(depth_img_png, depth_img_pfm, depth_true_value)
+        #plot3d_contours(depth_img_png, img_label, depth_true_value)
 
