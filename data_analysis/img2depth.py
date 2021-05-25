@@ -66,8 +66,10 @@ def plot3d_contours(npData1, npData2, npData3):
 
     # Graph1
     ax1 = fig.add_subplot(1,3,1, projection='3d')
-    depth3D_1 = ax1.contour3D(Y, X, npData1, 20, cmap=cm.jet)
-    ax1.set(xlabel='Height', ylabel='Width', zlabel='Depth', title='Output_png')
+    # depth3D_1 = ax1.contour3D(Y, X, npData1, 20, cmap=cm.RdPu)
+    # rstride:row step size, cstride:column step size, cmap:colour map, linewidth: wireframe line width
+    depth3D_1 = ax1.plot_surface(Y, X, npData1, rstride=20, cstride=20, cmap=cm.RdPu, linewidth=10, antialiased=True, label='label')
+    ax1.set(xlabel='Height', ylabel='Width', zlabel='Depth', title='label')
 
     # Graph2
     ax2 = fig.add_subplot(1,3,2, projection='3d')
@@ -79,7 +81,7 @@ def plot3d_contours(npData1, npData2, npData3):
     depth3D_3 = ax3.contour3D(Y, X, npData3, 20, cmap=cm.jet)
     ax3.set(xlabel='Height', ylabel='Width', zlabel='Depth', title='True value')
 
-    plt.show()
+    plt.savefig('./experiment/graph.png')
 
 
 for file_name in file_names:
@@ -127,9 +129,13 @@ for file_name in file_names:
         img_label = pd.read_csv(path_label+file_name_csv).to_numpy()
         img_label = np.rot90(img_label)
         img_label = img_label[::-1]
+
+        np.unique
+
         print("Range: ", np.min(img_label), " ~ ", np.max(img_label))
         print("Shape: ", img_label.shape)
 
         #graph visualization
-        #plot3d_contours(depth_img_png, img_label, depth_true_value)
+        plot3d_contours(img_label, depth_img_pfm, depth_true_value)
+        exit()
 
