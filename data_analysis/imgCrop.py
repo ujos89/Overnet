@@ -26,12 +26,17 @@ def get_mode(npData):
     return mode
 
 def find_obj_bound(npData, value):
-    positons = np.array(list(zip(*np.where(npData == value))))
+    l_limit, r_limit, u_limit, d_limit = npData.shape[1], 0, npData.shape[0], 0
+    positions = np.array(list(zip(*np.where(npData == value))))
     
-    ## how to find largest portion of labels in npData????
-    
-    #limits of [left, right, up, down]
-    bounds = [10, 500, 40, 320]
+    for pos in positions:
+
+        l_limit = min(l_limit, pos[1])
+        r_limit = max(r_limit, pos[1])
+        u_limit = min(u_limit, pos[0])
+        d_limit = min(d_limit, pos[0])
+        
+    bounds = [l_limit, r_limit, u_limit, d_limit]
     return bounds
 
 def imgCrop_depth(img_np, bounds):
@@ -70,6 +75,7 @@ def main():
 
 
     for file_name in file_names:
+        if file_name.endswith('.png'):
             file_name_csv = file_name.replace('.png', '.csv')
             npData_label = rawcsv2np(path_label+file_name_csv)
             print()
@@ -78,7 +84,8 @@ def main():
 
             #Crop img_depth example
             npData_dpt_pfm = dptcsv2np(path_dpt_pfm+file_name_csv)
-            bounds = find_obj_bound(npData_dpt_pfm, 0)
+            bounds = find_obj_bound(npData_label, mode)
+            print(bounds)
             npData_dpt_pfm_ul, npData_dpt_pfm_ur, npData_dpt_pfm_bl, npData_dpt_pfm_br = imgCrop_depth(npData_dpt_pfm, bounds)
 
 
