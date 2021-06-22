@@ -9,5 +9,5 @@ def nyucsv2np(file):
 
     return npData
 
-def img2csv(file):
+def img2np(file):
     return io.imread(file)
