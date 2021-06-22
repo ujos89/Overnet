@@ -238,7 +238,8 @@ class FeatureFusionBlock(nn.Module):
         output = self.resConfUnit2(output)
 
         output = nn.functional.interpolate(
-            output, scale_factor=2, mode="bilinear", align_corners=True
+            # True -> False
+            output, scale_factor=2, mode="bilinear", align_corners=False
         )
 
         return output
@@ -375,7 +376,8 @@ class FeatureFusionBlock_custom(nn.Module):
         output = self.resConfUnit2(output)
 
         output = nn.functional.interpolate(
-            output, scale_factor=2, mode="bilinear", align_corners=self.align_corners
+            # self.align_corners -> False
+            output, scale_factor=2, mode="bilinear", align_corners=False
         )
 
         output = self.out_conv(output)
